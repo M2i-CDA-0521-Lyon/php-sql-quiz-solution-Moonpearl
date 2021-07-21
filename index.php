@@ -2,7 +2,31 @@
 
 include './models/Question.php';
 
+// Crée la connexion à la base de données
 $databaseHandler = new PDO('mysql:host=localhost;dbname=quiz', 'root', 'root');
+// Vérifie si l'utilisateur vient de répondre à une question
+$formSubmitted = $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['answer']) && isset($_POST['current-question']);
+
+// Si l'utilisateur vient de répondre à une question
+if ($formSubmitted) {
+  // Récupère la question précédente en base de données
+  $statement = $databaseHandler->prepare('SELECT * FROM `question` WHERE `id` = :id');
+  $statement->execute([ ':id' => $_POST['current-question' ] ]);
+  $questionData = $statement->fetch();
+  $previousQuestion = new Question(
+    $questionData['id'],
+    $questionData['text'],
+    $questionData['answer1'],
+    $questionData['answer2'],
+    $questionData['answer3'],
+    $questionData['answer4'],
+    $questionData['right_answer'],
+    $questionData['rank']
+  );
+  // Vérifie si la réponse fournie par l'utilisateur correspond à la bonne réponse à la question précédente
+  $rightlyAnswered = intval($_POST['answer']) === $previousQuestion->getRightAnswer();
+}
+
 $statement = $databaseHandler->query('SELECT * FROM `question` ORDER BY `rank` LIMIT 1');
 $questionData = $statement->fetch();
 $question = new Question(
@@ -34,12 +58,20 @@ $question = new Question(
 <body>
   <div class="container">
     <h1>Quizz</h1>
-    <div id="answer-result" class="alert alert-success">
-      <i class="fas fa-thumbs-up"></i> Bravo, c'était la bonne réponse!
+
+    <?php if ($formSubmitted): ?>
+    <!-- Affiche une alerte uniquement si l'utilisateur vient de répondre à une question -->
+    <div id="answer-result" class="alert alert-<?php if ($rightlyAnswered) { echo 'success'; } else { echo 'danger'; } ?>">
+      <i class="fas fa-thumbs-<?php if ($rightlyAnswered) { echo 'up'; } else { echo 'down'; } ?>"></i>
+      <!-- Affiche un texte différent selon que l'utilisateur a bien répondu à la question ou non -->
+      <?php if ($rightlyAnswered): ?>
+        Bravo, c'était la bonne réponse!
+      <?php else: ?>
+        Hé non! La bonne réponse était <strong>...</strong>
+      <?php endif; ?>
     </div>
-    <div id="answer-result" class="alert alert-danger">
-      <i class="fas fa-thumbs-down"></i> Hé non! La bonne réponse était <strong>...</strong>
-    </div>
+    <?php endif; ?>
+
     <h2 class="mt-4">Question n°<span id="question-id"><?= $question->getRank() ?></span></h2>
     <form id="question-form" method="post">
       <p id="current-question-text" class="question-text"><?= $question->getText() ?></p>
@@ -61,7 +93,7 @@ $question = new Question(
           <label class="custom-control-label" for="answer4" id="answer4-caption"><?= $question->getAnswer4() ?></label>
         </div>
       </div>
-      <input type="hidden" name="current-question" value="0" />
+      <input type="hidden" name="current-question" value="<?= $question->getId() ?>" />
       <button type="submit" class="btn btn-primary">Valider</button>
     </form>
   </div>
