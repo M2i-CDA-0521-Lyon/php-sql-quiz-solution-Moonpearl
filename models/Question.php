@@ -31,19 +31,19 @@ class Question
      *
      * @param integer|null $id Identifiant en base de données
      * @param string $text Texte de la question
-     * @param integer|null $rightAnswerId Identifiant en base de données de la bonne réponse
      * @param integer|null $rank Rang de la question
+     * @param integer|null $rightAnswerId Identifiant en base de données de la bonne réponse
      */
     public function __construct(
         ?int $id = null,
         string $text = '',
-        ?int $rightAnswerId = null,
-        ?int $rank = null
+        ?int $rank = null,
+        ?int $rightAnswerId = null
     )
     {
         $this->id = $id;
         $this->text = $text;
-        $this->rightAnswer = $rightAnswer;
+        $this->rightAnswerId = $rightAnswerId;
         $this->rank = $rank;
     }
 
