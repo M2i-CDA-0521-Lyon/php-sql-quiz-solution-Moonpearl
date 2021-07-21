@@ -1,5 +1,6 @@
 <?php
 
+include './models/Answer.php';
 include './models/Question.php';
 
 // Crée la connexion à la base de données
@@ -16,29 +17,34 @@ if ($formSubmitted) {
   $previousQuestion = new Question(
     $questionData['id'],
     $questionData['text'],
-    $questionData['answer1'],
-    $questionData['answer2'],
-    $questionData['answer3'],
-    $questionData['answer4'],
-    $questionData['right_answer'],
-    $questionData['rank']
+    $questionData['rank'],
+    $questionData['right_answer_id']
   );
   // Vérifie si la réponse fournie par l'utilisateur correspond à la bonne réponse à la question précédente
-  $rightlyAnswered = intval($_POST['answer']) === $previousQuestion->getRightAnswer();
+  $rightlyAnswered = intval($_POST['answer']) === $previousQuestion->getRightAnswerId();
 }
 
+// Récupère la question actuelle en base de données
 $statement = $databaseHandler->query('SELECT * FROM `question` ORDER BY `rank` LIMIT 1');
 $questionData = $statement->fetch();
 $question = new Question(
   $questionData['id'],
   $questionData['text'],
-  $questionData['answer1'],
-  $questionData['answer2'],
-  $questionData['answer3'],
-  $questionData['answer4'],
-  $questionData['right_answer'],
-  $questionData['rank']
+  $questionData['rank'],
+  $questionData['right_answer_id']
 );
+
+// Récupère les réponses associées à la question actuelle en base de données
+$statement = $databaseHandler->prepare('SELECT * FROM `answer` WHERE `question_id` = :questionId');
+$statement->execute([ 'questionId' => $question->getId() ]);
+$allAnswersData = $statement->fetchAll();
+foreach ($allAnswersData as $answerData) {
+  $answers []= new Answer(
+    $answerData['id'],
+    $answerData['text'],
+    $answerData['question_id']
+  );
+}
 
 ?>
 
@@ -75,24 +81,18 @@ $question = new Question(
     <h2 class="mt-4">Question n°<span id="question-id"><?= $question->getRank() ?></span></h2>
     <form id="question-form" method="post">
       <p id="current-question-text" class="question-text"><?= $question->getText() ?></p>
+
       <div id="answers" class="d-flex flex-column">
+
+        <?php foreach ($answers as $answer): ?>
         <div class="custom-control custom-radio mb-2">
-          <input class="custom-control-input" type="radio" name="answer" id="answer1" value="1">
-          <label class="custom-control-label" for="answer1" id="answer1-caption"><?= $question->getAnswer1() ?></label>
+          <input class="custom-control-input" type="radio" name="answer" id="answer<?= $answer->getId() ?>" value="<?= $answer->getId() ?>">
+          <label class="custom-control-label" for="answer<?= $answer->getId() ?>" id="answer<?= $answer->getId() ?>-caption"><?= $answer->getText() ?></label>
         </div>
-        <div class="custom-control custom-radio mb-2">
-          <input class="custom-control-input" type="radio" name="answer" id="answer2" value="2">
-          <label class="custom-control-label" for="answer2" id="answer2-caption"><?= $question->getAnswer2() ?></label>
-        </div>
-        <div class="custom-control custom-radio mb-2">
-          <input class="custom-control-input" type="radio" name="answer" id="answer3" value="3">
-          <label class="custom-control-label" for="answer3" id="answer3-caption"><?= $question->getAnswer3() ?></label>
-        </div>
-        <div class="custom-control custom-radio mb-2">
-          <input class="custom-control-input" type="radio" name="answer" id="answer4" value="4">
-          <label class="custom-control-label" for="answer4" id="answer4-caption"><?= $question->getAnswer4() ?></label>
-        </div>
+        <?php endforeach; ?>
+
       </div>
+      
       <input type="hidden" name="current-question" value="<?= $question->getId() ?>" />
       <button type="submit" class="btn btn-primary">Valider</button>
     </form>
