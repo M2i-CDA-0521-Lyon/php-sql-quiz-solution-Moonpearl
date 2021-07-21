@@ -10,18 +10,28 @@ $formSubmitted = $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['answer']
 
 // Si l'utilisateur vient de répondre à une question
 if ($formSubmitted) {
-  // Récupère la question précédente en base de données
-  $statement = $databaseHandler->prepare('SELECT * FROM `question` WHERE `id` = :id');
+  // Récupère la question précédente en base de données avec sa bonne réponse
+  $statement = $databaseHandler->prepare('SELECT
+    `question`.`id`,
+    `answer`.`id` as `right_answer_id`,
+    `answer`.`text` as `right_answer_text`
+    FROM `question`
+    JOIN `answer` ON `answer`.`id` = `question`.`right_answer_id`
+    WHERE `question`.`id` = :id'
+  );
   $statement->execute([ ':id' => $_POST['current-question' ] ]);
   $questionData = $statement->fetch();
   $previousQuestion = new Question(
     $questionData['id'],
-    $questionData['text'],
-    $questionData['rank'],
-    $questionData['right_answer_id']
+    '',
+    null,
+    new Answer(
+      $questionData['right_answer_id'],
+      $questionData['right_answer_text']
+    )
   );
   // Vérifie si la réponse fournie par l'utilisateur correspond à la bonne réponse à la question précédente
-  $rightlyAnswered = intval($_POST['answer']) === $previousQuestion->getRightAnswerId();
+  $rightlyAnswered = intval($_POST['answer']) === $previousQuestion->getRightAnswer()->getId();
 }
 
 // Récupère la question actuelle en base de données
@@ -30,8 +40,7 @@ $questionData = $statement->fetch();
 $question = new Question(
   $questionData['id'],
   $questionData['text'],
-  $questionData['rank'],
-  $questionData['right_answer_id']
+  $questionData['rank']
 );
 
 // Récupère les réponses associées à la question actuelle en base de données
@@ -39,11 +48,12 @@ $statement = $databaseHandler->prepare('SELECT * FROM `answer` WHERE `question_i
 $statement->execute([ 'questionId' => $question->getId() ]);
 $allAnswersData = $statement->fetchAll();
 foreach ($allAnswersData as $answerData) {
-  $answers []= new Answer(
+  $answer = new Answer(
     $answerData['id'],
     $answerData['text'],
-    $answerData['question_id']
+    $question
   );
+  $answers []= $answer;
 }
 
 ?>
@@ -73,7 +83,7 @@ foreach ($allAnswersData as $answerData) {
       <?php if ($rightlyAnswered): ?>
         Bravo, c'était la bonne réponse!
       <?php else: ?>
-        Hé non! La bonne réponse était <strong>...</strong>
+        Hé non! La bonne réponse était <strong><?= $previousQuestion->getRightAnswer()->getText() ?></strong>
       <?php endif; ?>
     </div>
     <?php endif; ?>

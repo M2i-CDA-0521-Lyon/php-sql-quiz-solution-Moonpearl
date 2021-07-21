@@ -16,27 +16,26 @@ class Answer
      */
     private string $text;
     /**
-     * Identifiant en base de données de la question à laquelle la réponse est associée
-     * @var integer|null
+     * Question à laquelle la réponse est associée
+     * @var Question|null
      */
-    private ?int $questionId;
+    private ?Question $question;
 
     /**
      * Crée une nouvelle réponse
      *
      * @param integer|null $id Identifiant en base de données
      * @param string $text Texte de la réponse
-     * @param integer|null $questionId Identifiant en base de données de la question à laquelle la réponse est associée
      */
     public function __construct(
         ?int $id = null,
         string $text = '',
-        ?int $questionId = null
+        ?Question $question = null
     )
     {
         $this->id = $id;
         $this->text = $text;
-        $this->questionId = $questionId;
+        $this->question = $question;
     }
 
     /**
@@ -60,12 +59,23 @@ class Answer
     }
 
     /**
-     * Get identifiant en base de données de la question à laquelle la réponse est associée
+     * Get question à laquelle la réponse est associée
      *
-     * @return  integer|null
+     * @return  Question|null
      */ 
-    public function getQuestionId()
+    public function getQuestion(): ?Question
     {
-        return $this->questionId;
+        return $this->question;
+    }
+
+    /**
+     * Redéfinit la question à laquelle la réponse est associée
+     *
+     * @param Question|null $question La nouvelle question à associer
+     * @return void
+     */
+    public function setQuestion(?Question $question)
+    {
+        $this->question = $question;
     }
 }

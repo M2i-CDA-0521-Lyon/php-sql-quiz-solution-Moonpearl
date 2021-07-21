@@ -21,10 +21,10 @@ class Question
      */
     private ?int $rank;
     /**
-     * Identifiant en base de données de la bonne réponse
-     * @var integer|null
+     * La bonne réponse
+     * @var Answer|null
      */
-    private int $rightAnswerId;
+    private ?Answer $rightAnswer;
 
     /**
      * Crée une nouvelle question
@@ -32,19 +32,19 @@ class Question
      * @param integer|null $id Identifiant en base de données
      * @param string $text Texte de la question
      * @param integer|null $rank Rang de la question
-     * @param integer|null $rightAnswerId Identifiant en base de données de la bonne réponse
+     * @param Answer|null $rightAnswer Identifiant en base de données de la bonne réponse
      */
     public function __construct(
         ?int $id = null,
         string $text = '',
         ?int $rank = null,
-        ?int $rightAnswerId = null
+        ?Answer $rightAnswer = null
     )
     {
         $this->id = $id;
         $this->text = $text;
-        $this->rightAnswerId = $rightAnswerId;
         $this->rank = $rank;
+        $this->rightAnswer = $rightAnswer;
     }
 
     /**
@@ -78,12 +78,23 @@ class Question
     }
 
     /**
-     * Get identifiant en base de données de la bonne réponse
+     * Get la bonne réponse
      *
-     * @return  integer|null
+     * @return  Answer|null
      */ 
-    public function getRightAnswerId(): ?int
+    public function getrightAnswer(): ?Answer
     {
-        return $this->rightAnswerId;
+        return $this->rightAnswer;
+    }
+
+    /**
+     * Redéfinit la bonne réponse
+     *
+     * @param Answer|null $answer La nouvelle bonne réponse
+     * @return void
+     */
+    public function setRightAnswer(?Answer $answer)
+    {
+        $this->rightAnswer = $answer;
     }
 }
