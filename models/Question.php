@@ -27,12 +27,38 @@ class Question
     private ?Answer $rightAnswer;
 
     /**
+     * Récupère une question en base de données en fonction de son identifiant
+     *
+     * @param integer $id Identifiant de la question à récupérer
+     * @return Question|null
+     */
+    static public function findById(int $id): ?Question
+    {
+        // Crée la connexion à la base de données
+        $databaseHandler = new PDO('mysql:host=localhost;dbname=quiz', 'root', 'root');
+        $statement = $databaseHandler->prepare('SELECT * FROM `question` WHERE `id` = :id');
+        $statement->execute([ ':id' => $id ]);
+        $questionData = $statement->fetch();
+        // Si la requête ne renvoie pas de résultat, c'est donc que l'enregistrement demandé n'existe pas
+        if ($questionData === false) {
+            // Renvoie null au lieu de renvoyer un objet
+            return null;
+        }
+        // Sinon, renvoie un objet construit à partir de l'enregistrement demandé
+        return new Question(
+            $questionData['id'],
+            $questionData['text'],
+            $questionData['rank']
+        );
+    }
+
+    /**
      * Crée une nouvelle question
      *
      * @param integer|null $id Identifiant en base de données
      * @param string $text Texte de la question
      * @param integer|null $rank Rang de la question
-     * @param Answer|null $rightAnswer Identifiant en base de données de la bonne réponse
+     * @param Answer|null $rightAnswer La bonne réponse
      */
     public function __construct(
         ?int $id = null,

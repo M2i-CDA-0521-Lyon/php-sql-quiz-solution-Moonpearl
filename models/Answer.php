@@ -22,10 +22,34 @@ class Answer
     private ?Question $question;
 
     /**
+     * Récupère toutes les réponses associées à une question
+     *
+     * @param Question $question La question pour laquelle on souhaite récupérer les réponses
+     * @return Answer[]
+     */
+    static public function findByQuestion(Question $question): array
+    {
+        // Crée la connexion à la base de données
+        $databaseHandler = new PDO('mysql:host=localhost;dbname=quiz', 'root', 'root');
+        $statement = $databaseHandler->prepare('SELECT * FROM `answer` WHERE `question_id` = :questionId');
+        $statement->execute([ ':questionId' => $question->getId() ]);
+        $answersData = $statement->fetchAll();
+        foreach ($answersData as $answerData) {
+            $answers []= new Answer(
+                $answerData['id'],
+                $answerData['text'],
+                $question
+            );
+        }
+        return $answers;
+    }
+
+    /**
      * Crée une nouvelle réponse
      *
      * @param integer|null $id Identifiant en base de données
      * @param string $text Texte de la réponse
+     * @param Question|null $question Question à laquelle la réponse est associée 
      */
     public function __construct(
         ?int $id = null,

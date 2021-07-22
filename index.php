@@ -19,7 +19,7 @@ if ($formSubmitted) {
     JOIN `answer` ON `answer`.`id` = `question`.`right_answer_id`
     WHERE `question`.`id` = :id'
   );
-  $statement->execute([ ':id' => $_POST['current-question' ] ]);
+  $statement->execute([ ':id' => $_POST['current-question'] ]);
   $questionData = $statement->fetch();
   $previousQuestion = new Question(
     $questionData['id'],
@@ -35,26 +35,10 @@ if ($formSubmitted) {
 }
 
 // Récupère la question actuelle en base de données
-$statement = $databaseHandler->query('SELECT * FROM `question` ORDER BY `rank` LIMIT 1');
-$questionData = $statement->fetch();
-$question = new Question(
-  $questionData['id'],
-  $questionData['text'],
-  $questionData['rank']
-);
+$question = Question::findById(2);
 
 // Récupère les réponses associées à la question actuelle en base de données
-$statement = $databaseHandler->prepare('SELECT * FROM `answer` WHERE `question_id` = :questionId');
-$statement->execute([ 'questionId' => $question->getId() ]);
-$allAnswersData = $statement->fetchAll();
-foreach ($allAnswersData as $answerData) {
-  $answer = new Answer(
-    $answerData['id'],
-    $answerData['text'],
-    $question
-  );
-  $answers []= $answer;
-}
+$answers = Answer::findByQuestion($question);
 
 ?>
 
